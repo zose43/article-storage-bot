@@ -3,9 +3,12 @@ package storage
 import (
 	"article-storage-bot/lib/e"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 )
+
+var ErrNoSavedPages = errors.New("no one saved page")
 
 type Storage interface {
 	Save(p *Page) error
