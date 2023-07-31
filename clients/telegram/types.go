@@ -8,24 +8,21 @@ type Update struct {
 }
 
 type IncomingMessage struct {
-	Id   int       `json:"message_id"`
-	Date time.Time `json:"date"`
-	Text string    `json:"text"`
-	User `json:"from"`
-	Chat `json:"chat"`
+	Id   int           `json:"message_id"`
+	Date time.Duration `json:"date"`
+	Text string        `json:"text"`
+	User User          `json:"from"`
+	Chat Chat          `json:"chat"`
 }
 
 type User struct {
 	Id       int    `json:"id"`
 	Name     string `json:"first_name"`
-	LastName string `json:"last_name"`
 	Username string `json:"username"`
-	Language string `json:"language_code"`
 }
 
 type Chat struct {
-	Id    int    `json:"id"`
-	Title string `json:"title"`
+	Id int `json:"id"`
 }
 
 type UpdateResponse struct {

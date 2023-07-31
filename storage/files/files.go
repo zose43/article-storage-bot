@@ -43,7 +43,7 @@ func (s Storage) Save(p *storage.Page) (err error) {
 func (s Storage) PickRandom(uName string) (*storage.Page, error) {
 	fp := filepath.Join(s.basePath, uName)
 	files, err := os.ReadDir(fp)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
 	}
 	if len(files) == 0 {
@@ -62,7 +62,7 @@ func (s Storage) Remove(p *storage.Page) error {
 	if err != nil {
 		return e.Wrap(msg, err)
 	}
-	fp := filepath.Join(s.basePath, fName)
+	fp := filepath.Join(s.basePath, p.UserName, fName)
 	if err := os.Remove(fp); err != nil {
 		return e.Wrap(fmt.Sprintf("%s %s", msg, fp), err)
 	}
@@ -76,7 +76,7 @@ func (s Storage) IsExists(p *storage.Page) (bool, error) {
 		return false, e.Wrap(msg, err)
 	}
 
-	fp := filepath.Join(s.basePath, fName)
+	fp := filepath.Join(s.basePath, p.UserName, fName)
 	switch _, err := os.Stat(fp); {
 	case errors.Is(err, os.ErrNotExist):
 		return false, nil

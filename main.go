@@ -14,7 +14,7 @@ const BatchSize = 10
 func main() {
 	t, h := mustToken()
 	tgClient := telegram.NewClient(*t, *h)
-	fetcher := manager.NewManager(&tgClient, files.NewStorage(""))
+	fetcher := manager.NewManager(&tgClient, files.NewStorage("xxx"))
 	consumer := event_consumer.NewConsumer(fetcher, fetcher, BatchSize)
 
 	log.Print("service started")

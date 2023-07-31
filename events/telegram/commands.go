@@ -58,6 +58,7 @@ func (m *Manager) sendRandom(chatId int, username string) error {
 	}
 	if errors.Is(err, storage.ErrNoSavedPages) {
 		_ = sendMsg(MsgNoSavedPages)
+		return nil
 	}
 	if err = sendMsg(p.URL); err != nil {
 		return e.Wrap("can't send message", err)
@@ -82,6 +83,7 @@ func (m *Manager) savePage(pageUrl, username string, chatId int) error {
 		if err := sendMsg(MsgAlreadyExist); err != nil {
 			return e.Wrap("can't send message", err)
 		}
+		return nil
 	}
 
 	if err = m.storage.Save(&p); err != nil {
@@ -106,5 +108,5 @@ func isAddCmd(text string) bool {
 
 func isUrl(text string) bool {
 	u, err := url.Parse(text)
-	return err != nil && u.Host != ""
+	return err == nil && u.Host != ""
 }
