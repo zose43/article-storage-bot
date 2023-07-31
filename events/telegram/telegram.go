@@ -37,7 +37,7 @@ type Meta struct {
 func (m *Manager) Fetch(limit int) ([]events.Event, error) {
 	updates, err := m.tg.Updates(m.offset, limit)
 	if err != nil {
-		_ = e.Wrap("can't fetch updates", err)
+		return nil, e.Wrap("can't fetch updates", err)
 	}
 	if len(updates) == 0 {
 		return nil, nil
@@ -82,7 +82,7 @@ func event(upd telegram.Update) events.Event {
 	if updType == events.Message {
 		res.Meta = Meta{
 			ChatId:   upd.Message.Chat.Id,
-			Username: upd.Message.Username,
+			Username: upd.Message.User.Username,
 		}
 	}
 	return res
