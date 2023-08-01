@@ -13,27 +13,35 @@ type Consumer struct {
 }
 
 func (c Consumer) Handle() error {
-	// TODO fallback list(retry), parallel handler, counter consistent errors
+	// TODO fallback list(retry, counter consistent errors
 	log.SetPrefix("error: ")
-	for {
-		gotEvents, err := c.Fetch(c.batchSize)
-		if err != nil {
-			log.Printf("can't handle event %s", err)
-			continue
-		}
-
-		if len(gotEvents) == 0 {
-			time.Sleep(1 * time.Second)
-			continue
-		}
-
-		for _, event := range gotEvents {
-			err := c.Processor.Processor(event)
-			if err != nil {
-				log.Printf("can't handle event %s", err)
-				continue
+	ch := make(chan []events.Event, 25)
+	go func() {
+		for {
+			select {
+			case collection := <-ch:
+				for _, event := range collection {
+					go func(event events.Event) {
+						err := c.Processor.Processor(event)
+						if err != nil {
+							log.Printf("can't process event %s", err)
+						}
+					}(event)
+				}
 			}
 		}
+	}()
+	for {
+		go func() {
+			time.Sleep(400 * time.Millisecond)
+			gotEvents, err := c.Fetch(c.batchSize)
+			if err != nil {
+				log.Printf("can't fetch event %s", err)
+			}
+			if len(gotEvents) > 0 {
+				ch <- gotEvents
+			}
+		}()
 	}
 }
 
