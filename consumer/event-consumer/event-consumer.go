@@ -32,8 +32,8 @@ func (c Consumer) Handle() error {
 		}
 	}()
 	for {
+		time.Sleep(500 * time.Millisecond)
 		go func() {
-			time.Sleep(400 * time.Millisecond)
 			gotEvents, err := c.Fetch(c.batchSize)
 			if err != nil {
 				log.Printf("can't fetch event %s", err)
