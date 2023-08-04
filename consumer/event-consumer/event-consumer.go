@@ -2,6 +2,10 @@ package event_consumer
 
 import (
 	"article-storage-bot/events"
+	"article-storage-bot/lib/retry"
+	"context"
+	"errors"
+	"fmt"
 	"log"
 	"time"
 )
@@ -12,11 +16,23 @@ type Consumer struct {
 	batchSize int
 }
 
+var Shutdown = fmt.Errorf("too many errors, Shutdown")
+
+type errCounter struct {
+	errNums int
+	ticker  time.Ticker
+}
+
 func (c Consumer) Handle() error {
-	// TODO fallback list(retry, counter consistent errors
 	log.SetPrefix("error: ")
 	ch := make(chan []events.Event, 25)
+
+	backoff := retry.NewBackoff(100*time.Millisecond, 3*time.Second, 3, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	r := retry.NewRetrier(backoff, nil)
+	ec := errCounter{ticker: *(time.NewTicker(30 * time.Second))}
 	go func() {
+		defer log.Print("close ch")
 		for {
 			select {
 			case collection := <-ch:
@@ -28,18 +44,39 @@ func (c Consumer) Handle() error {
 						}
 					}(event)
 				}
+			case <-ec.ticker.C:
+				if ec.errNums > 10 {
+					cancel()
+					close(ch)
+					return
+				}
 			}
 		}
 	}()
 	for {
 		time.Sleep(500 * time.Millisecond)
 		go func() {
-			gotEvents, err := c.Fetch(c.batchSize)
+			err := r.Run(ctx, func(ctx context.Context) error {
+				select {
+				case <-ctx.Done():
+					return Shutdown
+				default:
+					gotEvents, err := c.Fetch(c.batchSize)
+					if err != nil {
+						return err
+					}
+					if len(gotEvents) > 0 {
+						ch <- gotEvents
+					}
+					return nil
+				}
+			})
 			if err != nil {
+				ec.errNums++
 				log.Printf("can't fetch event %s", err)
 			}
-			if len(gotEvents) > 0 {
-				ch <- gotEvents
+			if errors.Is(err, Shutdown) {
+				log.Fatal(err)
 			}
 		}()
 	}
