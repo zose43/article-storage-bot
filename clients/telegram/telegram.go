@@ -3,7 +3,7 @@ package telegram
 import (
 	"article-storage-bot/lib/e"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +13,8 @@ import (
 
 const UPDATE = "getUpdates"
 const SEND = "sendMessage"
+
+var EmptyUpdates = errors.New("no one updateResponse")
 
 type Client struct {
 	host     string
@@ -35,7 +37,7 @@ func (c *Client) Updates(offset, limit int) ([]Update, error) {
 		return nil, e.Wrap(msg, err)
 	}
 	if !res.Issue {
-		return nil, fmt.Errorf("No one updateResponse %v\n", res)
+		return nil, EmptyUpdates
 	}
 	return res.Results, nil
 }

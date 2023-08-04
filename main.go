@@ -2,7 +2,7 @@ package main
 
 import (
 	"article-storage-bot/clients/telegram"
-	event_consumer "article-storage-bot/consumer/event-consumer"
+	eventconsumer "article-storage-bot/consumer/event-consumer"
 	manager "article-storage-bot/events/telegram"
 	"article-storage-bot/storage/files"
 	"flag"
@@ -15,7 +15,7 @@ func main() {
 	t, h := mustToken()
 	tgClient := telegram.NewClient(*t, *h)
 	fetcher := manager.NewManager(&tgClient, files.NewStorage("xxx"))
-	consumer := event_consumer.NewConsumer(fetcher, fetcher, BatchSize)
+	consumer := eventconsumer.NewConsumer(fetcher, fetcher, BatchSize)
 
 	log.Print("service started")
 	log.Fatal(consumer.Handle())

@@ -36,7 +36,7 @@ type Meta struct {
 
 func (m *Manager) Fetch(limit int) ([]events.Event, error) {
 	updates, err := m.tg.Updates(m.offset, limit)
-	if err != nil {
+	if !errors.Is(err, telegram.EmptyUpdates) && err != nil {
 		return nil, e.Wrap("can't fetch updates", err)
 	}
 	if len(updates) == 0 {
